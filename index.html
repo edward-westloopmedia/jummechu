@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 점메추</title>
+<style>
+  :root {
+    --bg: #faf6ef; --card: #ffffff; --ink: #2b2420; --muted: #8a7f76;
+    --line: #ebe2d6; --accent: #e8552e; --accent-ink: #fff; --chip: #f3ebe0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1816; --card: #26221f; --ink: #f2ebe4; --muted: #a39890;
+            --line: #3a332e; --accent: #ff6a3d; --chip: #332d29; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+  main { max-width: 560px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.5px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 13px; }
+  section { margin-bottom: 14px; }
+  .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+          padding: 6px 12px; border-radius: 999px; font-size: 14px; cursor: pointer; }
+  .chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .count { color: var(--muted); font-size: 13px; margin: 18px 0 10px; }
+  .go { width: 100%; padding: 18px; font-size: 20px; font-weight: 800; border: 0;
+        border-radius: 16px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .go:disabled { opacity: .4; cursor: default; }
+  .result { margin-top: 18px; background: var(--card); border: 1px solid var(--line);
+            border-radius: 18px; padding: 20px; min-height: 120px; }
+  .result.empty { display: grid; place-items: center; color: var(--muted); text-align: center; }
+  .rname { font-size: 26px; font-weight: 800; margin: 2px 0 6px; letter-spacing: -0.5px; }
+  .rolling .rname { color: var(--muted); }
+  .cat { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 6px;
+         background: var(--chip); color: var(--muted); }
+  .row { display: flex; gap: 8px; margin: 6px 0; font-size: 14px; }
+  .row b { min-width: 56px; color: var(--muted); font-weight: 600; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .btn { flex: 1; min-width: 120px; text-align: center; padding: 10px; border-radius: 10px;
+         border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+         font-size: 14px; text-decoration: none; cursor: pointer; }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  details { margin-top: 22px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .cal-head { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 8px; font-weight: 700; }
+  .cal-head button { background: var(--chip); border: 1px solid var(--line); color: var(--ink);
+                     border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal .dow { text-align: center; font-size: 11px; color: var(--muted); padding: 2px 0; }
+  .cal .day { min-height: 58px; border: 1px solid var(--line); border-radius: 8px; padding: 3px;
+              background: var(--card); cursor: pointer; overflow: hidden; }
+  .cal .day.blank { visibility: hidden; }
+  .cal .day.today { border-color: var(--accent); }
+  .cal .day.sel { outline: 2px solid var(--ink); }
+  .cal .num { font-size: 11px; color: var(--muted); }
+  .cal .meal { font-size: 10px; line-height: 1.25; background: var(--chip); border-radius: 4px; padding: 1px 3px;
+               margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hist { list-style: none; padding: 0; margin: 8px 0 0; font-size: 14px; }
+  .hist li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .hist button { background: none; border: 0; color: var(--muted); cursor: pointer; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 20px; }
+  .search { width: 100%; margin: 10px 0 8px; padding: 10px 12px; font-size: 15px; border-radius: 10px;
+            border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+  .list { list-style: none; padding: 0; margin: 8px 0 0; }
+  .list li { padding: 10px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .list li:hover { background: var(--chip); }
+  .list .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; }
+  .list .meta { font-size: 13px; color: var(--muted); }
+  .list .off { opacity: .45; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🍚 오늘 점메추</h1>
+  <p class="sub">서소문로11길 19 기준 · 점심 12:30–13:30</p>
+
+  <section><div class="label">카테고리</div><div class="chips" id="cat"></div></section>
+  <section><div class="label">도보 시간</div><div class="chips" id="walk"></div></section>
+  <section><div class="label">가격대</div><div class="chips" id="price"></div></section>
+  <section><div class="label">조건</div><div class="chips" id="opt"></div></section>
+
+  <div class="count" id="count"></div>
+  <button class="go" id="go">점메추 돌리기 🎲</button>
+  <div class="result empty" id="result">버튼을 누르면 오늘의 점심이 정해져요</div>
+
+  <details id="all">
+    <summary>전체 식당 리스트 (<span id="lcount">0</span>)</summary>
+    <input class="search" id="q" placeholder="이름·메뉴 검색 (예: 김밥, 짬뽕)">
+    <div class="chips" id="lopt"></div>
+    <ul class="list" id="list"></ul>
+  </details>
+
+  <details>
+    <summary>먹은 곳 달력 (<span id="hcount">0</span>)</summary>
+    <div class="cal-head"><button id="prevM">‹</button><span id="calTitle"></span><button id="nextM">›</button></div>
+    <div class="cal" id="cal"></div>
+    <div class="label" style="margin-top:12px" id="selTitle"></div>
+    <ul class="hist" id="hist"></ul>
+  </details>
+
+  <p class="note">대표 메뉴·가격대는 리뷰 기반 참고용이에요. 영업시간은 Google 지도 기준이라 방문 전 확인을 권장해요.</p>
+</main>
+
+<script>
+const DATA = [{"n": "함평집 서울시청점", "c": "한식", "m": "육회비빔밥, 전복장비빔밥", "p": 2, "r": 4.3, "closed": [], "tags": ["wait"], "pid": "ChIJZe5IesujfDURMEz1JC78wZM", "hu": false, "d": 260, "w": 4}, {"n": "숭례도담", "c": "한식", "m": "김치찌개, 보쌈, 묵은지찜", "p": 2, "r": 4.6, "closed": [], "tags": ["group"], "pid": "ChIJ40ZgD_OifDURnhyFFo0VSzE", "hu": false, "d": 640, "w": 9}, {"n": "탄백", "c": "한식", "m": "육개장칼국수, 곰칼국수, 온제육", "p": 2, "r": 4.9, "closed": [], "tags": ["wait"], "pid": "ChIJkVvfYQCjfDURe22EhH-Apnc", "hu": false, "d": 320, "w": 5}, {"n": "설품 덕수궁점", "c": "한식", "m": "국밥, 국수", "p": 3, "r": 4.8, "closed": [], "tags": ["solo"], "pid": "ChIJy2lORQCjfDURkVHQ3Mm4lew", "hu": false, "d": 490, "w": 7}, {"n": "한가람", "c": "한식", "m": "불고기전골, LA갈비, 장어구이", "p": 3, "r": 4.5, "closed": [], "tags": ["group"], "pid": "ChIJL9jRmfOifDURy1p3PjqqMkk", "hu": false, "d": 780, "w": 11}, {"n": "청송옥", "c": "한식", "m": "장터국밥, 육회비빔밥, 비빔냉면", "p": 1, "r": 4.0, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJs5s7f4uifDUR18AEIXhwYUU", "hu": false, "d": 100, "w": 2}, {"n": "보승회관 시청점", "c": "한식", "m": "순대국밥, 항정수육국밥", "p": 1, "r": 4.1, "closed": [], "tags": ["solo"], "pid": "ChIJUxUNdc6jfDUR5rxE9eNCyTU", "hu": false, "d": 550, "w": 8}, {"n": "육전국밥 서소문점", "c": "한식", "m": "육전국밥, 불고기, 냉면", "p": 1, "r": 4.7, "closed": [], "tags": ["solo"], "pid": "ChIJaz-azUOjfDURUBmK_wt-_eo", "hu": true, "d": 110, "w": 2}, {"n": "신의주찹쌀순대 서소문점", "c": "한식", "m": "순대국, 순대정식", "p": 1, "r": 3.6, "closed": [], "tags": ["solo"], "pid": "ChIJwepZqoyifDURMarFNDjahr0", "hu": false, "d": 380, "w": 6}, {"n": "담원순대", "c": "한식", "m": "순대국밥, 돼지국밥, 모둠수육", "p": 1, "r": 4.6, "closed": [0], "tags": ["wait", "solo"], "pid": "ChIJ1RmhGZWjfDURqWMe6feWU3c", "hu": false, "d": 280, "w": 4}, {"n": "조조칼국수", "c": "한식", "m": "동죽칼국수, 해물파전", "p": 2, "r": 4.6, "closed": [], "tags": ["wait", "solo"], "pid": "ChIJXRM5_rijfDURyDAkfB9M3XM", "hu": false, "d": 330, "w": 5}, {"n": "명동할머니국수 시청점", "c": "한식", "m": "잔치국수, 김치국수, 볶음밥", "p": 1, "r": 3.8, "closed": [], "tags": ["solo"], "pid": "ChIJM81chqyjfDURnFRP0GzJUtU", "hu": true, "d": 490, "w": 7}, {"n": "명동칼국수 서울시청점", "c": "한식", "m": "칼국수", "p": 1, "r": 3.8, "closed": [0], "tags": ["solo"], "pid": "ChIJxxCerTWjfDURCqtfnp1xNNQ", "hu": false, "d": 820, "w": 11}, {"n": "아리연", "c": "한식", "m": "해물 한정식 코스", "p": 3, "r": 4.1, "closed": [0], "tags": ["group"], "pid": "ChIJoVHZvPSifDURp4hxKCqdM4g", "hu": false, "d": 620, "w": 9}, {"n": "처가집", "c": "한식", "m": "백반 정식(반찬 다수)", "p": 1, "r": 3.2, "closed": [], "tags": [], "pid": "ChIJAVCVoPSifDURJEBtD011-sQ", "hu": false, "d": 550, "w": 8}, {"n": "서소문연탄구이", "c": "한식", "m": "연탄 제육구이, 주꾸미", "p": 1, "r": 4.2, "closed": [0], "tags": [], "pid": "ChIJn_oggIyifDURJG4HvoLwtoA", "hu": false, "d": 80, "w": 2}, {"n": "조선정육식당", "c": "한식", "m": "김치찌개, 계란말이", "p": 1, "r": 4.0, "closed": [0, 6], "tags": [], "pid": "ChIJZZ9hMPKifDUR3t8YOfBr0_8", "hu": false, "d": 880, "w": 12}, {"n": "본짚 시청본점", "c": "한식", "m": "숯불고기(점심 메뉴 확인 필요)", "p": 3, "r": 4.9, "closed": [0, 6], "tags": ["group"], "pid": "ChIJfYsmJnWjfDURdqmC-F2ruU8", "hu": false, "d": 660, "w": 9}, {"n": "해주면가", "c": "한식", "m": "어복쟁반, 김치말이국수", "p": 2, "r": 4.7, "closed": [], "tags": ["wait", "group"], "pid": "ChIJ8bqyKDmjfDURAyzqbla6mVc", "hu": true, "d": 510, "w": 7}, {"n": "대보정 시청역점", "c": "한식", "m": "한우 샤브샤브 점심코스", "p": 3, "r": 5.0, "closed": [0], "tags": ["group"], "pid": "ChIJAXx1WQCjfDUR_aKsoPfHvxo", "hu": false, "d": 350, "w": 5}, {"n": "동남집", "c": "한식", "m": "양지곰탕, 뚝배기불고기, 비빔국수", "p": 1, "r": 4.5, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJw4rzzUmjfDURb05ucs-vv8g", "hu": false, "d": 510, "w": 7}, {"n": "제주한라해장", "c": "한식", "m": "내장탕, 선지해장국", "p": 1, "r": 4.6, "closed": [], "tags": ["wait", "solo"], "pid": "ChIJKzUnb4qifDURAh2lCwTK9-I", "hu": true, "d": 510, "w": 7}, {"n": "남도식당(정동집)", "c": "한식", "m": "추어탕", "p": 1, "r": 4.3, "closed": [0], "tags": ["solo"], "pid": "ChIJz7f0U4yifDURMBGk-XRhVxQ", "hu": false, "d": 330, "w": 5}, {"n": "덕수정", "c": "한식", "m": "오징어볶음, 부대찌개", "p": 1, "r": 4.1, "closed": [0], "tags": [], "pid": "ChIJ1Rr8U4yifDUR86FqeRsdDWA", "hu": false, "d": 310, "w": 5}, {"n": "서대문식당", "c": "한식", "m": "두루치기 점심특선, 된장찌개", "p": 1, "r": 4.1, "closed": [], "tags": [], "pid": "ChIJx6-BOImifDUR1TTUaBC8sFE", "hu": false, "d": 400, "w": 6}, {"n": "서대문집", "c": "한식", "m": "숯불닭갈비, 덮밥류", "p": 2, "r": 4.2, "closed": [0], "tags": [], "pid": "ChIJvRY45IiifDURc2g1P-cGWiU", "hu": false, "d": 640, "w": 9}, {"n": "바른고기 서대문점", "c": "한식", "m": "고기 점심특선", "p": 2, "r": 4.8, "closed": [], "tags": ["group"], "pid": "ChIJnwAEIHWjfDURODG_kEHVcqw", "hu": true, "d": 620, "w": 9}, {"n": "신의주부대찌개 시청점", "c": "한식", "m": "부대찌개, 계란말이", "p": 1, "r": 4.0, "closed": [], "tags": ["group"], "pid": "ChIJV7_XqfOifDURE_sGBGYfoH4", "hu": false, "d": 710, "w": 10}, {"n": "의정부부대찌개(북창동)", "c": "한식", "m": "부대찌개(점심 라면·밥 무한)", "p": 1, "r": 3.9, "closed": [], "tags": [], "pid": "ChIJ91mTfPOifDURHc0Mcu-Ol28", "hu": false, "d": 660, "w": 9}, {"n": "고려삼계탕 시청점", "c": "한식", "m": "삼계탕, 오골계삼계탕", "p": 3, "r": 4.2, "closed": [], "tags": ["wait", "solo"], "pid": "ChIJOVx5nYuifDURAtKWJ9ZktE4", "hu": false, "d": 120, "w": 2}, {"n": "장안삼계탕", "c": "한식", "m": "삼계탕, 전복삼계탕", "p": 3, "r": 4.4, "closed": [], "tags": ["solo"], "pid": "ChIJK2JkEPOifDURkhfODkoEzIc", "hu": false, "d": 590, "w": 8}, {"n": "서울삼계탕", "c": "한식", "m": "삼계탕, 오골계탕", "p": 3, "r": 4.0, "closed": [], "tags": ["solo"], "pid": "ChIJbW91EfOifDURFUV5riiKBTg", "hu": false, "d": 600, "w": 9}, {"n": "예신라삼계탕 서소문점", "c": "한식", "m": "삼계탕", "p": 3, "r": 4.3, "closed": [0], "tags": ["solo"], "pid": "ChIJXcx104mifDURjJv0PKcXI1M", "hu": false, "d": 630, "w": 9}, {"n": "콩뼈숫뼈감자탕", "c": "한식", "m": "감자탕, 김치찌개, 갈비탕", "p": 1, "r": 4.4, "closed": [], "tags": ["solo"], "pid": "ChIJaZxdBQGjfDURk_yYRl8m8WA", "hu": false, "d": 710, "w": 10}, {"n": "태양 시청점", "c": "중식", "m": "짜장면, 짬뽕, 탕수육", "p": 1, "r": 4.9, "closed": [], "tags": ["group"], "pid": "ChIJzxFbPACjfDURgwPAiipL49o", "hu": false, "d": 550, "w": 8}, {"n": "유방녕의 wok", "c": "중식", "m": "짬뽕, 탕수육, 멘보샤", "p": 2, "r": 4.2, "closed": [6], "tags": ["group"], "pid": "ChIJv-__MQyjfDUR9gZbwZaaewI", "hu": false, "d": 120, "w": 2}, {"n": "더 퍼스트 서래향 시청점", "c": "중식", "m": "짜장면, 게살XO볶음밥, 딤섬", "p": 2, "r": 4.9, "closed": [], "tags": ["group"], "pid": "ChIJ03QpKwCjfDURdf16_ig2vAs", "hu": false, "d": 800, "w": 11}, {"n": "배재반점", "c": "중식", "m": "유니짜장, 군만두, 깐풍기", "p": 1, "r": 3.8, "closed": [], "tags": ["group"], "pid": "ChIJA1ATnIuifDURTUTYWxqfaUE", "hu": false, "d": 110, "w": 2}, {"n": "차이797 시청", "c": "중식", "m": "짬뽕, 점심 코스", "p": 2, "r": 3.9, "closed": [], "tags": ["group"], "pid": "ChIJ5xzP_tqjfDURkOfiySdItmQ", "hu": false, "d": 260, "w": 4}, {"n": "상하이", "c": "중식", "m": "짬뽕, 군만두, 탕수육", "p": 1, "r": 4.0, "closed": [], "tags": ["group"], "pid": "ChIJc9UjoKSjfDUR06Ciw-GrA0w", "hu": false, "d": 270, "w": 4}, {"n": "복성각", "c": "중식", "m": "짜장면, 탕수육, 꿔바로우", "p": 1, "r": 3.8, "closed": [], "tags": ["wait", "group"], "pid": "ChIJnamWJ_OifDURB7S5l-QneXk", "hu": false, "d": 490, "w": 7}, {"n": "교동짬뽕 남대문시장점", "c": "중식", "m": "짬뽕, 군만두", "p": 1, "r": 4.0, "closed": [], "tags": ["solo"], "pid": "ChIJr04DFkGjfDURTKONR90niVs", "hu": false, "d": 970, "w": 13}, {"n": "라향각 마라탕", "c": "중식", "m": "마라탕, 마라샹궈", "p": 1, "r": 4.1, "closed": [], "tags": ["solo"], "pid": "ChIJDQNsrFmjfDUR2jKVBn6n8xg", "hu": false, "d": 900, "w": 12}, {"n": "피슈마라홍탕 서울시청점", "c": "중식", "m": "마라탕, 마라샹궈", "p": 1, "r": 4.0, "closed": [0], "tags": ["wait", "solo"], "pid": "ChIJwW39E0ejfDURoJCWY3T5GYg", "hu": false, "d": 950, "w": 13}, {"n": "멘츠루 시청점", "c": "일식", "m": "라멘, 츠케멘, 교자", "p": 2, "r": 4.8, "closed": [], "tags": ["solo"], "pid": "ChIJIQ_6_1SjfDUR-h1cENnc1Ek", "hu": false, "d": 140, "w": 2}, {"n": "긴자료코 시청점", "c": "일식", "m": "생크림 데미 돈까스", "p": 2, "r": 4.7, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJXd1aYFyjfDUR3Eh-vbklnVY", "hu": false, "d": 90, "w": 2}, {"n": "신기소 정동점", "c": "일식", "m": "돈까스, 우동, 메밀소바", "p": 1, "r": 3.6, "closed": [], "tags": ["solo"], "pid": "ChIJUX4Sb46ifDURZ6CEbyhsoq0", "hu": false, "d": 700, "w": 10}, {"n": "카즈카잔", "c": "일식", "m": "카츠나베, 돈까스", "p": 2, "r": 3.3, "closed": [], "tags": ["solo"], "pid": "ChIJb4imLmCifDUR3qzM5MTh7_8", "hu": false, "d": 750, "w": 10}, {"n": "행복한하루소바", "c": "일식", "m": "메밀소바, 돈까스세트, 알밥", "p": 2, "r": 3.8, "closed": [], "tags": ["wait"], "pid": "ChIJG1Ywv-2ifDURwPUF8v7Vh9k", "hu": false, "d": 980, "w": 14}, {"n": "남대문돈까스", "c": "일식", "m": "돈까스, 생선까스", "p": 1, "r": 4.7, "closed": [0], "tags": ["solo"], "pid": "ChIJcZW58_SifDURcOIpYAKIFXM", "hu": false, "d": 780, "w": 11}, {"n": "우모촌", "c": "일식", "m": "메밀소바, 우동, 쫄면", "p": 1, "r": 4.3, "closed": [0], "tags": ["solo"], "pid": "ChIJ93OGJ_WifDURlVcj_4jDW8c", "hu": false, "d": 700, "w": 10}, {"n": "멜로멜로", "c": "양식", "m": "파스타, 리조또, 등심스테이크", "p": 3, "r": 4.8, "closed": [], "tags": ["group"], "pid": "ChIJgd4cHGajfDURB5dXb45N33Y", "hu": true, "d": 780, "w": 11}, {"n": "Spagne 시청점", "c": "양식", "m": "크림파스타, 트러플리조또, 피자", "p": 2, "r": 3.8, "closed": [0, 6], "tags": [], "pid": "ChIJVfaEJvOifDURAX5Pv8tuK6U", "hu": false, "d": 550, "w": 8}, {"n": "오드하우스", "c": "양식", "m": "파스타, 한우 카르파치오", "p": 3, "r": 4.5, "closed": [], "tags": ["group"], "pid": "ChIJcepzLG-jfDURGlf-0nTMBIY", "hu": false, "d": 360, "w": 5}, {"n": "바스버거 시청점", "c": "양식", "m": "수제버거(감자칩 리필)", "p": 2, "r": 4.8, "closed": [0], "tags": ["solo"], "pid": "ChIJ8-fIaouifDURuzjNwCfNKX4", "hu": false, "d": 320, "w": 5}, {"n": "노모어피자", "c": "양식", "m": "조각/한판 피자", "p": 1, "r": 4.4, "closed": [], "tags": ["solo"], "pid": "ChIJ29YupsyjfDUR0owHv0A1pAQ", "hu": false, "d": 920, "w": 13}, {"n": "샐러디 북창동", "c": "양식", "m": "샐러드, 포케, 수프", "p": 1, "r": 4.7, "closed": [], "tags": ["solo"], "pid": "ChIJdQtSN1mjfDURjpNAgq9-ijg", "hu": false, "d": 680, "w": 10}, {"n": "슬로우캘리 서울시청역점", "c": "양식", "m": "포케 보울", "p": 2, "r": 4.6, "closed": [0], "tags": ["solo"], "pid": "ChIJ1XUlVHyjfDURDZDmeAkDOLo", "hu": false, "d": 410, "w": 6}, {"n": "써브웨이 시청점", "c": "양식", "m": "샌드위치", "p": 1, "r": 3.9, "closed": [], "tags": ["solo"], "pid": "ChIJq_Q5p_SifDURm5dFL8U2OME", "hu": false, "d": 530, "w": 8}, {"n": "싸다김밥 시청역점", "c": "분식·기타", "m": "김밥, 떡볶이, 치즈돈까스", "p": 1, "r": 4.1, "closed": [], "tags": ["solo"], "pid": "ChIJrXUNO4GjfDURDlT2IH8wCpk", "hu": false, "d": 540, "w": 8}, {"n": "라밥 시청점", "c": "분식·기타", "m": "김밥, 라면, 떡볶이", "p": 1, "r": 4.5, "closed": [], "tags": ["solo"], "pid": "ChIJgXbnZy2jfDURacPEZK9DozQ", "hu": false, "d": 550, "w": 8}, {"n": "고모네 분식", "c": "분식·기타", "m": "라면, 김밥", "p": 1, "r": 3.2, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJqXpN-pqjfDUR96fvX1LZ_d4", "hu": false, "d": 280, "w": 4}, {"n": "김밥천국 정동점", "c": "분식·기타", "m": "김밥, 돈까스, 라면", "p": 1, "r": 3.9, "closed": [], "tags": ["solo"], "pid": "ChIJ1RePb46ifDURD8Jvs3CyLl0", "hu": false, "d": 690, "w": 10}, {"n": "로뎀나무", "c": "분식·기타", "m": "치즈 해물 떡볶이", "p": 1, "r": 4.1, "closed": [], "tags": [], "pid": "ChIJpV-Wb46ifDUREmgcoNojn4s", "hu": false, "d": 690, "w": 10}, {"n": "호아빈 시청점", "c": "분식·기타", "m": "쌀국수", "p": 2, "r": 3.6, "closed": [], "tags": ["solo"], "pid": "ChIJ90pHMPOifDURQ_wE9m7n-9E", "hu": false, "d": 450, "w": 6}, {"n": "벳남미식 시청직영점", "c": "분식·기타", "m": "쌀국수, 반미", "p": 2, "r": 4.5, "closed": [0], "tags": ["solo", "group"], "pid": "ChIJ_eBjPQCjfDURyFVLpJgDZ5E", "hu": false, "d": 150, "w": 2}, {"n": "왕건카레 시티스퀘어점", "c": "분식·기타", "m": "카레(맵기 선택, 밥 리필)", "p": 1, "r": 4.8, "closed": [], "tags": ["solo"], "pid": "ChIJexy5oVmjfDURQMhg5AVmc_o", "hu": false, "d": 350, "w": 5}, {"n": "이삭토스트 서소문점", "c": "분식·기타", "m": "햄스페셜·베이컨베스트 토스트", "p": 1, "r": 3.8, "closed": [0], "tags": ["solo"], "pid": "ChIJQ0odf4uifDURhuqW2EM6l34", "hu": false, "d": 100, "w": 2}, {"n": "오토김밥 중구점", "c": "분식·기타", "m": "오토김밥, 유부김밥, 떡볶이", "p": 1, "r": 5.0, "closed": [0], "tags": ["solo"], "pid": "ChIJIxEDBwCjfDURE4xPZy4XoVk", "hu": false, "d": 270, "w": 4}, {"n": "김가네 시청점", "c": "분식·기타", "m": "김밥, 제육덮밥, 라면", "p": 1, "r": 4.0, "closed": [], "tags": ["solo"], "pid": "ChIJkyM_FfOifDURbhWb_WUW4LE", "hu": false, "d": 560, "w": 8}, {"n": "김가네 무교점", "c": "분식·기타", "m": "김밥, 치즈돈까스, 라면", "p": 1, "r": 3.7, "closed": [], "tags": ["solo"], "pid": "ChIJg4ahR46jfDURTHsQ8EOxL-8", "hu": false, "d": 890, "w": 12}, {"n": "장인라면 서울시청점", "c": "분식·기타", "m": "라면, 김밥", "p": 1, "r": 4.6, "closed": [], "tags": ["solo"], "pid": "ChIJwRgibJqjfDURZOgFHXBxoC8", "hu": false, "d": 950, "w": 13}, {"n": "본도시락 서울시청점", "c": "분식·기타", "m": "도시락", "p": 1, "r": 3.5, "closed": [0], "tags": ["solo"], "pid": "ChIJQ2_1oPSifDUR-GfpJRrgbrg", "hu": false, "d": 560, "w": 8}, {"n": "광화문도시락카페", "c": "분식·기타", "m": "골라 담는 도시락", "p": 1, "r": 5.0, "closed": [0], "tags": ["solo"], "pid": "ChIJz1HJe_KifDURzFNMVWZXzXE", "hu": false, "d": 800, "w": 11}, {"n": "진진만두 시청점", "c": "분식·기타", "m": "만두, 만둣국", "p": 1, "r": 4.9, "closed": [], "tags": ["solo"], "pid": "ChIJHwFz5yejfDURs8ajUFYpnJc", "hu": false, "d": 820, "w": 11}, {"n": "가메골손왕만두", "c": "분식·기타", "m": "손왕만두, 김치만두", "p": 1, "r": 4.3, "closed": [0], "tags": ["wait", "solo"], "pid": "ChIJzwl7aPWifDURPd0xu2sYr-E", "hu": false, "d": 950, "w": 13}, {"n": "고레카레 시티스퀘어시청점", "c": "분식·기타", "m": "카레", "p": 1, "r": 3.0, "closed": [], "tags": ["solo"], "pid": "ChIJw7if7GajfDURg-ZSLjX0Mls", "hu": false, "d": 340, "w": 5}, {"n": "맘스터치 서울시청점", "c": "양식", "m": "싸이버거 세트", "p": 1, "r": 3.9, "closed": [], "tags": ["solo"], "pid": "ChIJ88TGle2ifDUR7Qy6F8Y2Ug0", "hu": false, "d": 940, "w": 13}, {"n": "맥도날드 무교점", "c": "양식", "m": "버거 세트", "p": 1, "r": 3.9, "closed": [], "tags": ["solo"], "pid": "ChIJyzH4k-2ifDURGou11BGU1w4", "hu": false, "d": 920, "w": 13}, {"n": "버거킹 서소문", "c": "양식", "m": "와퍼 세트", "p": 1, "r": 4.2, "closed": [], "tags": ["solo"], "pid": "ChIJrRfdctajfDURIZD8G3KIhUE", "hu": false, "d": 310, "w": 5}, {"n": "롯데리아 서대문역", "c": "양식", "m": "버거 세트", "p": 1, "r": 3.8, "closed": [], "tags": ["solo"], "pid": "ChIJwcoHqQKjfDURI_ZZhK5HU94", "hu": false, "d": 780, "w": 11}, {"n": "더 샌드위치 샵", "c": "양식", "m": "샌드위치", "p": 1, "r": 4.4, "closed": [0], "tags": ["solo"], "pid": "ChIJ_RNbYouifDURPy7k1Ut-ysM", "hu": false, "d": 180, "w": 3}, {"n": "르풀 정동", "c": "양식", "m": "샐러드, 샌드위치, 파스타", "p": 2, "r": 4.1, "closed": [], "tags": ["solo"], "pid": "ChIJk09BTYyifDURnlPH6DShNYk", "hu": false, "d": 360, "w": 5}, {"n": "라그린 정동", "c": "양식", "m": "브런치, 파스타", "p": 2, "r": 4.2, "closed": [0], "tags": [], "pid": "ChIJtWKCsfujfDURFSSC0LjOZiI", "hu": false, "d": 440, "w": 6}, {"n": "돈까스가땡길때", "c": "일식", "m": "돈까스", "p": 1, "r": 4.1, "closed": [0, 6], "tags": ["wait", "solo"], "pid": "ChIJPzPbTIiifDURy_w-z_rCX-M", "hu": false, "d": 570, "w": 8}, {"n": "카츠히데", "c": "일식", "m": "돈까스", "p": 2, "r": 4.3, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJLRF9QBCjfDURJWRJkzk-UG0", "hu": false, "d": 510, "w": 7}, {"n": "은행골 시청점", "c": "일식", "m": "초밥 세트", "p": 2, "r": 4.3, "closed": [], "tags": ["group"], "pid": "ChIJF9wVoqajfDURfnl1c3qQiHI", "hu": false, "d": 540, "w": 8}, {"n": "스시트로", "c": "일식", "m": "초밥, 고등어구이 정식", "p": 2, "r": 3.8, "closed": [0, 6], "tags": [], "pid": "ChIJtcUnCnajfDURfBwjZNnEXUg", "hu": false, "d": 270, "w": 4}, {"n": "시마스시 SFC몰점", "c": "일식", "m": "회전초밥", "p": 2, "r": 5.0, "closed": [], "tags": ["solo"], "pid": "ChIJ-fXVjZijfDURNw7hhysCyh4", "hu": false, "d": 930, "w": 13}, {"n": "나무 이자카야 시청", "c": "일식", "m": "점심 덮밥·식사류(확인 필요)", "p": 2, "r": 4.5, "closed": [], "tags": [], "pid": "ChIJbbZxM6GjfDURPJlhtZbWUEk", "hu": false, "d": 590, "w": 8}, {"n": "완차이면가 시티스퀘어점", "c": "중식", "m": "완탕면, 딤섬", "p": 2, "r": 4.3, "closed": [], "tags": ["wait", "solo"], "pid": "ChIJt15eJlCjfDURtFlhvY3iA9Q", "hu": false, "d": 340, "w": 5}, {"n": "더차이 서소문점", "c": "중식", "m": "짬뽕, 탕수육, 군만두", "p": 1, "r": 3.7, "closed": [], "tags": ["group"], "pid": "ChIJmf4LdwCjfDUR4xEPBVdTRTs", "hu": true, "d": 350, "w": 5}, {"n": "한국관 서소문점", "c": "한식", "m": "한식 정식", "p": 1, "r": 4.0, "closed": [0, 6], "tags": [], "pid": "ChIJedMw8ZqjfDURcf4kEeb4eSg", "hu": false, "d": 160, "w": 3}, {"n": "삼우정", "c": "한식", "m": "불고기 정식", "p": 2, "r": 4.1, "closed": [0, 6], "tags": ["group"], "pid": "ChIJ6WYSTfOifDURfHt_ic8PpUk", "hu": false, "d": 390, "w": 6}, {"n": "소공죽집", "c": "한식", "m": "전복죽, 해물죽", "p": 1, "r": 4.2, "closed": [], "tags": ["solo"], "pid": "ChIJH_34dfOifDUREtk1n1TWcMQ", "hu": false, "d": 460, "w": 7}, {"n": "춘천명가닭갈비", "c": "한식", "m": "닭갈비", "p": 2, "r": 4.3, "closed": [0, 6], "tags": ["group"], "pid": "ChIJZ8gIf_OifDUR_CaxErK8Cdg", "hu": false, "d": 720, "w": 10}, {"n": "북창동 청국장집", "c": "한식", "m": "청국장 정식", "p": 1, "r": 4.4, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJWavVgvOifDURWZsz9extVoc", "hu": false, "d": 740, "w": 10}, {"n": "무교동낙지 애 보쌈", "c": "한식", "m": "낙지볶음, 보쌈", "p": 2, "r": 3.6, "closed": [], "tags": ["group"], "pid": "ChIJTYTpJ_OifDURMlSggooCQ-o", "hu": false, "d": 480, "w": 7}, {"n": "쭈꾸미볶음집(북창동)", "c": "한식", "m": "쭈꾸미볶음", "p": 2, "r": 4.2, "closed": [0], "tags": [], "pid": "ChIJD8b3d_OifDURQfsn1cGAU_4", "hu": false, "d": 740, "w": 10}, {"n": "이화수 전통육개장", "c": "한식", "m": "육개장", "p": 2, "r": 3.6, "closed": [], "tags": ["solo"], "pid": "ChIJ1X9fa_OifDURXlRBvh7EEwc", "hu": false, "d": 580, "w": 8}, {"n": "닭한마리(서소문로11길)", "c": "한식", "m": "닭한마리, 떡사리", "p": 2, "r": 4.4, "closed": [0, 6], "tags": ["group"], "pid": "ChIJ103VfYuifDUR9ZNBnFkYZg4", "hu": false, "d": 120, "w": 2}, {"n": "닭칼원조집", "c": "한식", "m": "닭칼국수, 파전", "p": 1, "r": 4.1, "closed": [0, 6], "tags": ["solo"], "pid": "ChIJHyJhNmKifDUR6pDaDv4kbDc", "hu": false, "d": 720, "w": 10}, {"n": "희락식당", "c": "한식", "m": "갈치조림", "p": 2, "r": 4.0, "closed": [], "tags": [], "pid": "ChIJ43spXHlrMhUR4nZd154D8ZQ", "hu": false, "d": 780, "w": 11}];
+const DAYS = ["일","월","화","수","목","금","토"];
+const PRICE = { 1: "~1만원", 2: "1~1.5만원", 3: "1.5만원+" };
+const TAG = { wait: "⏳ 점심 웨이팅", solo: "🙋 혼밥 OK", group: "👥 단체·룸" };
+const RECENT_DAYS = 3;
+
+const state = {
+  cats: new Set(),           // 비어 있으면 전체
+  walk: 10,                  // 분, 0이면 전체
+  prices: new Set(),
+  opts: new Set(["open", "recent"]),
+};
+
+// ---- 최근 먹은 곳 (브라우저 저장소, 실패해도 동작) ----
+let eaten = [];
+try { eaten = JSON.parse(localStorage.getItem("jmc-eaten") || "[]"); } catch (e) {}
+function saveHistory() { try { localStorage.setItem("jmc-eaten", JSON.stringify(eaten)); } catch (e) {} }
+function recentNames() {
+  const cutoff = Date.now() - RECENT_DAYS * 86400000;
+  return new Set(eaten.filter(h => h.t >= cutoff).map(h => h.n));
+}
+
+// ---- 필터 ----
+function candidates() {
+  const today = new Date().getDay();
+  const recent = recentNames();
+  return DATA.filter(r =>
+    (!state.cats.size || state.cats.has(r.c)) &&
+    (!state.walk || r.w <= state.walk) &&
+    (!state.prices.size || state.prices.has(r.p)) &&
+    (!state.opts.has("open") || !r.closed.includes(today)) &&
+    (!state.opts.has("recent") || !recent.has(r.n)) &&
+    (!state.opts.has("nowait") || !r.tags.includes("wait")) &&
+    (!state.opts.has("solo") || r.tags.includes("solo")) &&
+    (!state.opts.has("group") || r.tags.includes("group"))
+  );
+}
+
+// ---- 칩 UI ----
+function chips(el, list, isOn, onClick) {
+  el.innerHTML = "";
+  list.forEach(([key, text]) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (isOn(key) ? " on" : "");
+    b.textContent = text;
+    b.onclick = () => { onClick(key); render(); };
+    el.appendChild(b);
+  });
+}
+function toggle(set, key) { set.has(key) ? set.delete(key) : set.add(key); }
+
+function render() {
+  const cats = ["한식", "중식", "일식", "양식", "분식·기타"];
+  chips(cat, [["", "전체"], ...cats.map(c => [c, c])],
+    k => k === "" ? !state.cats.size : state.cats.has(k),
+    k => k === "" ? state.cats.clear() : toggle(state.cats, k));
+  chips(walk, [[5, "5분 이내"], [10, "10분 이내"], [0, "전체"]],
+    k => state.walk === k, k => state.walk = k);
+  chips(price, [[1, PRICE[1]], [2, PRICE[2]], [3, PRICE[3]]],
+    k => state.prices.has(k), k => toggle(state.prices, k));
+  chips(opt, [["open", `오늘(${DAYS[new Date().getDay()]}) 영업`], ["recent", `최근 ${RECENT_DAYS}일 먹은 곳 제외`],
+              ["nowait", "웨이팅 없는 곳"], ["solo", "혼밥"], ["group", "단체"]],
+    k => state.opts.has(k), k => toggle(state.opts, k));
+
+  const n = candidates().length;
+  count.textContent = `후보 ${n}곳 / 전체 ${DATA.length}곳`;
+  go.disabled = n === 0;
+  renderHistory();
+  renderList();
+}
+
+// ---- 전체 리스트 ----
+const listState = { onlyFiltered: false, sort: "w" };
+function renderList() {
+  chips(lopt, [["f", "현재 필터만"], ["w", "거리순"], ["r", "평점순"], ["n", "이름순"]],
+    k => k === "f" ? listState.onlyFiltered : listState.sort === k,
+    k => k === "f" ? (listState.onlyFiltered = !listState.onlyFiltered) : (listState.sort = k));
+  const today = new Date().getDay();
+  const q = document.getElementById("q").value.trim();
+  const sorter = { w: (a, b) => a.w - b.w, r: (a, b) => b.r - a.r, n: (a, b) => a.n.localeCompare(b.n, "ko") }[listState.sort];
+  const rows = (listState.onlyFiltered ? candidates() : DATA.slice())
+    .filter(r => !q || r.n.includes(q) || r.m.includes(q) || r.c.includes(q))
+    .sort(sorter);
+  lcount.textContent = rows.length;
+  list.innerHTML = rows.length ? "" : "<li>검색 결과가 없어요</li>";
+  rows.forEach(r => {
+    const li = document.createElement("li");
+    const off = r.closed.includes(today);
+    li.innerHTML = `<div class="${off ? "off" : ""}">
+      <div class="top"><span>${r.n}</span><span class="meta">도보 ${r.w}분</span></div>
+      <div class="meta">${r.c} · ${r.m} · ${PRICE[r.p]} · ★${r.r.toFixed(1)}${off ? " · 오늘 휴무" : ""}</div></div>`;
+    li.onclick = () => { show(r); result.scrollIntoView({ behavior: "smooth", block: "center" }); };
+    list.appendChild(li);
+  });
+}
+
+// ---- 먹은 곳 달력 ----
+const now = new Date();
+const cal_ = { y: now.getFullYear(), m: now.getMonth(), sel: dayKey(now) };
+function dayKey(d) { return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+function mealsOn(key) { return eaten.map((h, i) => ({ ...h, i })).filter(h => dayKey(new Date(h.t)) === key); }
+
+function renderHistory() {
+  hcount.textContent = eaten.length;
+  calTitle.textContent = `${cal_.y}년 ${cal_.m + 1}월`;
+  cal.innerHTML = DAYS.map(d => `<div class="dow">${d}</div>`).join("");
+  const first = new Date(cal_.y, cal_.m, 1).getDay();
+  const last = new Date(cal_.y, cal_.m + 1, 0).getDate();
+  for (let i = 0; i < first; i++) cal.insertAdjacentHTML("beforeend", `<div class="day blank"></div>`);
+  for (let d = 1; d <= last; d++) {
+    const key = `${cal_.y}-${cal_.m + 1}-${d}`;
+    const cell = document.createElement("div");
+    cell.className = "day" + (key === dayKey(new Date()) ? " today" : "") + (key === cal_.sel ? " sel" : "");
+    cell.innerHTML = `<div class="num">${d}</div>` + mealsOn(key).map(h => `<div class="meal">${h.n}</div>`).join("");
+    cell.onclick = () => { cal_.sel = key; renderHistory(); };
+    cal.appendChild(cell);
+  }
+
+  const [y, m, d] = cal_.sel.split("-");
+  const meals = mealsOn(cal_.sel);
+  selTitle.textContent = `${m}월 ${d}일 (${DAYS[new Date(y, m - 1, d).getDay()]})`;
+  hist.innerHTML = meals.length ? "" : "<li>이 날은 기록이 없어요</li>";
+  meals.forEach(h => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${h.n}</span>`;
+    const x = document.createElement("button");
+    x.textContent = "삭제";
+    x.onclick = () => { eaten.splice(h.i, 1); saveHistory(); render(); };
+    li.appendChild(x);
+    hist.appendChild(li);
+  });
+}
+prevM.onclick = () => { if (--cal_.m < 0) { cal_.m = 11; cal_.y--; } renderHistory(); };
+nextM.onclick = () => { if (++cal_.m > 11) { cal_.m = 0; cal_.y++; } renderHistory(); };
+
+// ---- 룰렛 ----
+let picked = null;
+function spin() {
+  const list = candidates();
+  if (!list.length) return;
+  go.disabled = true;
+  result.className = "result rolling";
+  let i = 0, delay = 40;
+  const final = list[Math.floor(Math.random() * list.length)];
+  (function tick() {
+    const r = i > 18 ? final : list[Math.floor(Math.random() * list.length)];
+    result.innerHTML = `<span class="cat">${r.c}</span><div class="rname">${r.n}</div>`;
+    if (i++ > 18) { show(final); go.disabled = false; return; }
+    delay *= 1.15;
+    setTimeout(tick, delay);
+  })();
+}
+
+function show(r) {
+  picked = r;
+  const today = new Date().getDay();
+  const closed = r.closed.length ? r.closed.map(d => DAYS[d]).join("·") + " 점심 휴무" : "매일 점심 영업";
+  const gmap = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.n)}&query_place_id=${r.pid}`;
+  const nmap = `https://map.naver.com/p/search/${encodeURIComponent(r.n)}`;
+  result.className = "result";
+  result.innerHTML = `
+    <span class="cat">${r.c}</span>
+    <div class="rname">${r.n}</div>
+    <div class="row"><b>메뉴</b><span>${r.m}</span></div>
+    <div class="row"><b>가격대</b><span>${PRICE[r.p]}</span></div>
+    <div class="row"><b>거리</b><span>도보 약 ${r.w}분 (${r.d}m)</span></div>
+    <div class="row"><b>영업</b><span>${r.hu ? "영업시간 정보 없음 · 확인 필요" : closed}${r.closed.includes(today) ? " ⚠️ 오늘 휴무" : ""}</span></div>
+    <div class="row"><b>평점</b><span>★ ${r.r.toFixed(1)} (Google)</span></div>
+    <div class="tags">${r.tags.map(t => `<span class="tag">${TAG[t]}</span>`).join("")}</div>
+    <div class="actions">
+      <a class="btn" href="${nmap}" target="_blank" rel="noopener">네이버 지도</a>
+      <a class="btn" href="${gmap}" target="_blank" rel="noopener">Google 지도</a>
+    </div>
+    <div class="actions">
+      <button class="btn" id="again">다시 뽑기</button>
+      <button class="btn primary" id="decide">여기로 결정!</button>
+    </div>`;
+  again.onclick = spin;
+  decide.onclick = () => {
+    eaten.push({ n: r.n, t: Date.now() });
+    saveHistory();
+    decide.textContent = "기록했어요 ✓";
+    decide.disabled = true;
+    render();
+  };
+}
+
+go.onclick = spin;
+document.getElementById("q").oninput = renderList;
+render();
+</script>
+</body>
+</html>
